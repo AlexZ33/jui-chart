@@ -51,8 +51,8 @@
 
     var data = [
         { key: "1000_1", name: "W1", type: "was", outgoing: [] },
-        { key: "1000_2", name: "W2", type: "was", outgoing: [ "1000_3", "1000_4", "2000_1" ] },
-        { key: "1000_3", name: "W3", type: "was", outgoing: [ "1000_3_5" ] },
+        { key: "1000_2", name: "W2.ABCD", type: "was", outgoing: [ "1000_3", "1000_4", "2000_1" ] },
+        { key: "1000_3", name: "W3", type: "was", outgoing: [ "1000_3_5", "1000_2" ] },
         { key: "1000_3_5", name: "W35", type: "was", outgoing: [ "1_2_3_4" ] },
         { key: "1000_4", name: "W4", type: "server", outgoing: [ "1_2_3_4" ] },
         { key: "2000_1", name: "A1", type: "server", outgoing: [ "2000_2" ] },
@@ -148,7 +148,7 @@
 
                     return 1;
                 },
-                activeEdge: "1000_2:1000_3_5",
+                activeEdge: "1000_2:1_2_3_4",
                 //activeNode: "1000_2",
                 activeEvent: "dblclick"
             },

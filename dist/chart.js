@@ -13604,7 +13604,8 @@ jui.define("chart.brush.topologynode",
             textY = 14, padding = 7, anchor = 7,
             activeEdges = [];  // 선택된 엣지 객체
 
-        var connectedEdges = {};
+        var connectedEdges = [],
+            connectedEdgeStatus = [];
 
         function getDistanceXY(x1, y1, x2, y2, dist) {
             var a = x1 - x2,
@@ -13743,16 +13744,30 @@ jui.define("chart.brush.topologynode",
                 }
 
                 if(title && title != "") {
-                    self.chart.text({
+                    var texts = title.split("."),
+                        textSize = self.chart.theme("topologyNodeTitleFontSize") * xy.scale,
+                        textTop = (size.r + 13) * xy.scale;
+
+                    var textOpts = {
                         "class": "title",
                         x: 0.1 * xy.scale,
-                        y: (size.r + 13) * xy.scale,
+                        y: textTop,
                         fill: self.chart.theme("topologyNodeTitleFontColor"),
-                        "font-size": self.chart.theme("topologyNodeTitleFontSize") * xy.scale,
+                        "font-size": textSize,
                         "font-weight": "bold",
                         "text-anchor": "middle",
                         cursor: "pointer"
-                    }, title);
+                    };
+
+                    self.chart.text(textOpts, texts[0]);
+
+                    if(texts.length == 2) {
+                        self.chart.text(_.extend(textOpts, {
+                            "font-weight": "normal",
+                            "font-size": textSize * 0.7,
+                            y: textTop * 1.3
+                        }), texts[1]);
+                    }
                 }
             }).translate(xy.x, xy.y);
 
@@ -14111,39 +14126,37 @@ jui.define("chart.brush.topologynode",
             });
         }
 
-        function searchConnectedEdges(start, end, rowCache, moveCache, edges) {
+        function searchConnectedEdges(start, end, edgeKey) {
             var outgoing = self.getValue(start, "outgoing"),
                 key = self.getValue(start, "key");
 
-            if(moveCache[key]) {
+            if(_.inArray(edgeKey, connectedEdges) != -1) {
                 return;
-            } else {
-                moveCache[key] = true;
             }
 
-            if(outgoing.length == 0 && start != end) {
-                console.log(start, rowCache.length);
-                rowCache = [];
+            if(edgeKey != null) {
+                connectedEdges.push(edgeKey);
+            }
+
+            if(start == end) {
+                connectedEdgeStatus.push({
+                    type: "end",
+                    index: connectedEdges.length
+                });
+            } else {
+                if(outgoing.length == 0) {
+                    connectedEdgeStatus.push({
+                        type: "reset",
+                        index: connectedEdges.length
+                    });
+                }
             }
 
             for(var i = 0; i < outgoing.length; i++) {
                 var target = nodes[outgoing[i]],
                     edgeKey = start.key + ":" + target.key;
 
-                rowCache.push(edgeKey);
-
-                if(target != end) {
-                    console.log(edgeKey);
-                    searchConnectedEdges(target, end, rowCache, moveCache, edges);
-                } else {
-                    for(var j = 0; j < rowCache.length; j++) {
-                        edges[rowCache[j]] = true;
-                    }
-
-                    rowCache = [];
-                    console.log(edgeKey + "\n\nend");
-                    break;
-                }
+                searchConnectedEdges(target, end, edgeKey);
             }
         }
 
@@ -14206,16 +14219,23 @@ jui.define("chart.brush.topologynode",
                             var keys = edgeKey.split(":");
 
                             if(keys.length == 2) {
-                                var connectedEdgeKeys = {},
-                                    connectedEdges = [];
+                                var newEdges = [];
+                                searchConnectedEdges(nodes[keys[0]], nodes[keys[1]], null);
 
-                                searchConnectedEdges(nodes[keys[0]], nodes[keys[1]], [], {}, connectedEdgeKeys);
+                                for(var i = 0; i < connectedEdgeStatus.length; i++) {
+                                    var start = (i == 0) ? 0 : connectedEdgeStatus[i - 1].index,
+                                        end = connectedEdgeStatus[i].index - 1;
 
-                                for(var key in connectedEdgeKeys) {
-                                    connectedEdges.push(edges.get(key));
+                                    if(connectedEdgeStatus[i].type == "end") {
+                                        for(var j = start; j <= end; j++) {
+                                            newEdges.push(edges.get(connectedEdges[j]));
+                                        }
+                                    }
                                 }
 
-                                onCrossEdgeActiveHandler(connectedEdges);
+                                onCrossEdgeActiveHandler(newEdges);
+                                connectedEdges = [];
+                                connectedEdgeStatus = [];
                             }
                         } else {
                             onEdgeActiveHandler(edge);
