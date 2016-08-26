@@ -148,8 +148,8 @@
 
                     return 1;
                 },
-                activeEdge: "1000_2:1_2_3_4",
                 //activeNode: "1000_2",
+                //activeEdge: "1000_2:1_2_3_4",
                 activeEvent: "dblclick"
             },
             widget: {
@@ -177,6 +177,14 @@
                 topologyEdgeWidth : 1
             }
         });
+
+        setTimeout(function() {
+            c.updateBrush(0, {
+                activeEdge: "1000_2:1_2_3_4"
+            });
+
+            alert(1);
+        }, 3000);
     });
 </script>
 

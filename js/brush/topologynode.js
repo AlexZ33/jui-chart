@@ -713,7 +713,7 @@ jui.define("chart.brush.topologynode",
             // 액티브 엣지 선택 (렌더링 이후에 설정)
             if(_.typeCheck("string", self.brush.activeEdge)) {
                 this.on("render", function(init) {
-                    if(!init) {
+                    if(!init || self.axis.cache.activeEdge != self.brush.activeEdge) {
                         var edgeKey = self.brush.activeEdge,
                             edge = edges.get(edgeKey);
 
@@ -742,6 +742,8 @@ jui.define("chart.brush.topologynode",
                         } else {
                             onEdgeActiveHandler(edge);
                         }
+
+                        self.axis.cache.activeEdge = self.brush.activeEdge;
                     }
                 });
             }
